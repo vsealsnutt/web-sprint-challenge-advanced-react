@@ -1,4 +1,7 @@
-import React from 'react'
+import React from 'react';
+import axios from 'axios';
+
+const URL = 'http://localhost:9000/api/result';
 
 // Suggested initial states
 const initialMessage = ''
@@ -16,6 +19,10 @@ const initialState = {
 export default class AppClass extends React.Component {
   // THE FOLLOWING HELPERS ARE JUST RECOMMENDATIONS.
   // You can delete them and build your own logic from scratch.
+  constructor() {
+    super();
+    this.state = {initialState};
+  } 
 
   getXY = () => {
     // It it not necessary to have a state to track the coordinates.
@@ -26,6 +33,7 @@ export default class AppClass extends React.Component {
     // It it not necessary to have a state to track the "Coordinates (2, 2)" message for the user.
     // You can use the `getXY` helper above to obtain the coordinates, and then `getXYMessage`
     // returns the fully constructed string.
+    return (`Coordinates (, )`);
   }
 
   reset = () => {
@@ -45,10 +53,34 @@ export default class AppClass extends React.Component {
 
   onChange = (evt) => {
     // You will need this to update the value of the input.
+    this.setState({
+      ...this.state,
+      email: evt.target.value
+    });
   }
 
   onSubmit = (evt) => {
     // Use a POST request to send a payload to the server.
+    evt.preventDefault();
+    axios.post(URL, {
+      x: this.state.x,
+      y: this.state.y,
+      steps: this.state.steps,
+      email: this.state.email
+    })
+      .then(res => {
+        this.setState({
+          ...this.state,
+          message: res.data.message,
+          email: ''
+        })
+      })
+      .catch(err => {
+        this.setState({
+          ...this.state,
+          message: err.response.data.message
+        })
+      });
   }
 
   render() {
@@ -78,8 +110,8 @@ export default class AppClass extends React.Component {
           <button id="down">DOWN</button>
           <button id="reset">reset</button>
         </div>
-        <form>
-          <input id="email" type="email" placeholder="type email"></input>
+        <form onSubmit={this.onSubmit}>
+          <input id="email" type="email" placeholder="type email" onChange={this.onChange}></input>
           <input id="submit" type="submit"></input>
         </form>
       </div>
