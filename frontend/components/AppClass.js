@@ -1,6 +1,4 @@
 import React from 'react';
-import * as yup from 'yup';
-import { formSchema } from '../validation/formSchema';
 import axios from 'axios';
 
 const URL = 'http://localhost:9000/api/result';
@@ -127,12 +125,14 @@ export default class AppClass extends React.Component {
     if (`(${nextMove.x}, ${nextMove.y})` === this.getXY()) {
       return (
         this.setState({
+          ...this.state,
           message: `You can't go ${evt.target.id}`
         })
       )
     } else {
       return (
         this.setState({
+          ...this.state,
           message: initialMessage,
           x: nextMove.x,
           y: nextMove.y,
@@ -143,6 +143,31 @@ export default class AppClass extends React.Component {
     }
   };
 
+  post = () => {
+    const sendData = {
+      'x': this.state.x,
+      'y': this.state.y,
+      'steps': this.state.steps,
+      'email': this.state.email
+    }
+
+    axios.post(URL, sendData) 
+      .then(({data}) => this.setState({
+        ...this.state,
+        message: data.message
+      }))
+      .catch(err => {
+        this.setState({
+          ...this.state,
+          message: err.response.data.message
+        });
+        console.log('ERROR MESSAGE', err, err.response.data.message)
+      })
+      .finally(this.setState({
+        email: ''
+      }))
+  }
+
   onChange = (evt) => {
     // You will need this to update the value of the input.
     this.setState({
@@ -151,40 +176,10 @@ export default class AppClass extends React.Component {
     });
   }
 
-  validate = (name, value) => {
-    yup.reach(formSchema, name)
-      .validate(value)
-      .then(this.onSubmit())
-      .catch(err => this.setState({
-        message: err.errors[0]
-      }))
-  }
-
   onSubmit = (evt) => {
     // Use a POST request to send a payload to the server.
     evt.preventDefault();
-    axios.post(URL, {
-      'x': this.state.x,
-      'y': this.state.y,
-      'steps': this.state.steps,
-      'email': this.state.email
-    })
-      .then(res => {
-        this.setState({
-          ...this.state,
-          message: res.data.message,
-          email: ''
-        })
-      })
-      .catch(err => {
-        this.setState({
-          ...this.state,
-          message: err.response.data.message
-        })
-      })
-      .finally(this.setState({
-        email: ''
-      }))
+    this.post();
   }
 
   render() {
